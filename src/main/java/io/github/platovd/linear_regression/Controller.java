@@ -24,10 +24,10 @@ public class Controller implements Initializable {
     @FXML
     private Button clearButton;
 
-    private final Pair<Double, Double> KB_INITIAL = new Pair<>(1d, 1d);
-    private final int ITERATIONS_DEFAULT = 10000;
-    private final double STEP_DEFAULT = 1e-9;
-    private final double EPS_DEFAULT = 1e-6;
+    private Pair<Double, Double> KB_INITIAL;
+    private final int ITERATIONS_DEFAULT = 1000000;
+    private final double STEP_DEFAULT = 1e-6;
+    private final double EPS_DEFAULT = 1e-9;
     private final int POINT_RADIUS = 6;
     private final Color POINT_COLOR = Color.web("#fff");
     private final int AXIS_WIDTH = 5;
@@ -43,6 +43,7 @@ public class Controller implements Initializable {
         canvas.setOnMouseClicked(
                 this::handlePointCreation
         );
+        KB_INITIAL = new Pair<>(0d, 0d);
     }
 
     private void handlePointCreation(MouseEvent mouseEvent) {
@@ -55,8 +56,7 @@ public class Controller implements Initializable {
     }
 
     private void drawLine() {
-        Pair<Double, Double> KB = Solver.gradientDescent(points, KB_INITIAL, ITERATIONS_DEFAULT, STEP_DEFAULT, EPS_DEFAULT);
-        System.out.println(KB);
+        Pair<Double, Double> KB = Solver.gradientDescent(points, KB_INITIAL, ITERATIONS_DEFAULT, STEP_DEFAULT, STEP_DEFAULT * 100000, EPS_DEFAULT);
         double k = KB.getKey();
         double b = KB.getValue();
         Point startPoint = Util.convertFromScreenToDecartAndBack(0, 0 * k + b, canvas.getHeight());
