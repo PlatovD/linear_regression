@@ -25,8 +25,8 @@ public class Controller implements Initializable {
     private Button clearButton;
 
     private Pair<Double, Double> KB_INITIAL;
-    private final int ITERATIONS_DEFAULT = 1000000;
-    private final double STEP_DEFAULT = 1e-6;
+    private final int ITERATIONS_DEFAULT = 100000;
+    private final double STEP_DEFAULT = 1e-4;
     private final double EPS_DEFAULT = 1e-9;
     private final int POINT_RADIUS = 6;
     private final Color POINT_COLOR = Color.web("#fff");
