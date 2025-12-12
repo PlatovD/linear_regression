@@ -1,4 +1,4 @@
-package io.github.platovd.linear_regression;
+package io.github.platovd.linear_regression.util;
 
 import io.github.platovd.linear_regression.model.Point;
 

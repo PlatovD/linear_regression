@@ -2,20 +2,23 @@ package io.github.platovd.linear_regression;
 
 import io.github.platovd.linear_regression.model.Pair;
 import io.github.platovd.linear_regression.model.Point;
+import io.github.platovd.linear_regression.util.RegressionType;
+import io.github.platovd.linear_regression.util.Util;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class Controller implements Initializable {
     @FXML
@@ -24,7 +27,15 @@ public class Controller implements Initializable {
     @FXML
     private Button clearButton;
 
+    @FXML
+    private ChoiceBox<RegressionType> regressionTypeChoiceBox;
+
+    @FXML
+    private Spinner<Integer> integerSpinner;
+
     private Pair<Double, Double> KB_INITIAL;
+    private List<Double> PARAMS_INITIAL;
+
     private final int ITERATIONS_DEFAULT = 100000;
     private final double STEP_DEFAULT = 1e-4;
     private final double EPS_DEFAULT = 1e-9;
@@ -43,7 +54,23 @@ public class Controller implements Initializable {
         canvas.setOnMouseClicked(
                 this::handlePointCreation
         );
+        regressionTypeChoiceBox.itemsProperty().getValue().addAll(
+                RegressionType.LINEAR,
+                RegressionType.POLYNOMIAL
+        );
+        integerSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 5, 1));
+        integerSpinner.valueProperty().addListener(e -> {
+            changeInitialPolynomialParams(integerSpinner.getValue());
+            drawGraph();
+        });
+        regressionTypeChoiceBox.setValue(RegressionType.POLYNOMIAL);
+        regressionTypeChoiceBox.setOnAction(e -> drawGraph());
         KB_INITIAL = new Pair<>(0d, 0d);
+        changeInitialPolynomialParams(integerSpinner.getValue());
+    }
+
+    private void changeInitialPolynomialParams(int i) {
+        PARAMS_INITIAL = new ArrayList<>(Collections.nCopies(i + 1, 0.0));
     }
 
     private void handlePointCreation(MouseEvent mouseEvent) {
@@ -51,20 +78,51 @@ public class Controller implements Initializable {
         double y = mouseEvent.getY();
         Point point = Util.convertFromScreenToDecartAndBack(x, y, canvas.getHeight());
         points.add(point);
+        drawGraph();
+    }
+
+    private void drawGraph() {
         redraw();
-        drawLine();
+        if (regressionTypeChoiceBox.getValue().equals(RegressionType.LINEAR))
+            drawLine();
+        else drawPolynomialFunction();
     }
 
     private void drawLine() {
-        Pair<Double, Double> KB = Solver.gradientDescent(points, KB_INITIAL, ITERATIONS_DEFAULT, STEP_DEFAULT, STEP_DEFAULT * 100000, EPS_DEFAULT);
+        Pair<Double, Double> KB = LinearSolver.gradientDescent(points, KB_INITIAL, ITERATIONS_DEFAULT, STEP_DEFAULT, EPS_DEFAULT);
         double k = KB.getKey();
         double b = KB.getValue();
-        Point startPoint = Util.convertFromScreenToDecartAndBack(0, 0 * k + b, canvas.getHeight());
-        Point endPoint = Util.convertFromScreenToDecartAndBack(canvas.getWidth(), canvas.getWidth() * k + b, canvas.getHeight());
+        Point startPoint = Util.convertFromScreenToDecartAndBack(0, Normalizer.denormalizeY(Normalizer.normalizeX(0) * k + b), canvas.getHeight());
+        Point endPoint = Util.convertFromScreenToDecartAndBack(canvas.getWidth(), Normalizer.denormalizeY(Normalizer.normalizeX(canvas.getWidth()) * k + b), canvas.getHeight());
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setLineWidth(1);
         gc.setStroke(Color.WHITE);
         gc.strokeLine(startPoint.getX(), startPoint.getY(), endPoint.getX(), endPoint.getY());
+    }
+
+    private void drawPolynomialFunction() {
+        double height = canvas.getHeight();
+        List<Double> params = PolynomialSolver.gradientDescent(points, PARAMS_INITIAL, ITERATIONS_DEFAULT, STEP_DEFAULT, EPS_DEFAULT);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setLineWidth(1);
+        gc.setStroke(Color.WHITE);
+        gc.beginPath();
+        for (int x = 0; x < canvas.getWidth(); x++) {
+            double y = height - Normalizer.denormalizeY(calcPolynomialFunctionValue(params, Normalizer.normalizeX(x)));
+            gc.lineTo(x, y);
+        }
+        gc.stroke();
+    }
+
+    /**
+     * Прикольная штука - схема Горнера
+     */
+    private double calcPolynomialFunctionValue(List<Double> params, double x) {
+        double val = 0;
+        for (int i = params.size() - 1; i >= 0; i--) {
+            val = val * x + params.get(i);
+        }
+        return val;
     }
 
     private void redraw() {

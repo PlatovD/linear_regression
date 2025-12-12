@@ -7,4 +7,6 @@ module io.github.platovd.linear_regression {
     opens io.github.platovd.linear_regression to javafx.fxml;
     exports io.github.platovd.linear_regression.model;
     exports io.github.platovd.linear_regression;
+    exports io.github.platovd.linear_regression.util;
+    opens io.github.platovd.linear_regression.util to javafx.fxml;
 }
