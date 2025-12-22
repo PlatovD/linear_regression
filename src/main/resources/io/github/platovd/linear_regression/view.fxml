@@ -11,6 +11,7 @@
       <Canvas fx:id="canvas" height="717.0" layoutX="17.0" layoutY="69.0" width="967.0" />
       <Button fx:id="clearButton" layoutX="10.0" layoutY="17.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="163.0" style="-fx-background-color: #fcbe7e;" text="Очистить точки" />
       <ChoiceBox fx:id="regressionTypeChoiceBox" layoutX="200.0" layoutY="17.0" prefHeight="36.0" prefWidth="163.0" style="-fx-background-color: #fcbe7e;" />
-      <Spinner fx:id="integerSpinner" layoutX="381.0" layoutY="22.0" prefHeight="27.0" prefWidth="91.0" style="-fx-background-color: #fcbe7e;" />
+      <Spinner fx:id="integerSpinner" layoutX="611.0" layoutY="22.0" prefHeight="27.0" prefWidth="91.0" style="-fx-background-color: #fcbe7e;" />
+      <ChoiceBox fx:id="optimizationTypeChoiceBox" layoutX="400.0" layoutY="17.0" prefHeight="36.0" prefWidth="163.0" style="-fx-background-color: #fcbe7e;" />
    </children>
 </AnchorPane>

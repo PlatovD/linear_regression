@@ -2,6 +2,7 @@ package io.github.platovd.linear_regression;
 
 import io.github.platovd.linear_regression.model.Pair;
 import io.github.platovd.linear_regression.model.Point;
+import io.github.platovd.linear_regression.util.OptimizationType;
 import io.github.platovd.linear_regression.util.RegressionType;
 import io.github.platovd.linear_regression.util.Util;
 import javafx.event.ActionEvent;
@@ -31,12 +32,17 @@ public class Controller implements Initializable {
     private ChoiceBox<RegressionType> regressionTypeChoiceBox;
 
     @FXML
+    private ChoiceBox<OptimizationType> optimizationTypeChoiceBox;
+
+    @FXML
     private Spinner<Integer> integerSpinner;
 
     private Pair<Double, Double> KB_INITIAL;
     private List<Double> PARAMS_INITIAL;
 
     private final int ITERATIONS_DEFAULT = 100000;
+    private final int EPOCHS_DEFAULT = 5000;
+    private final int DEFAULT_BATCH_SIZE = 32;
     private final double STEP_DEFAULT = 1e-4;
     private final double EPS_DEFAULT = 1e-9;
     private final int POINT_RADIUS = 6;
@@ -58,11 +64,17 @@ public class Controller implements Initializable {
                 RegressionType.LINEAR,
                 RegressionType.POLYNOMIAL
         );
+        optimizationTypeChoiceBox.itemsProperty().getValue().addAll(
+                OptimizationType.NO_OPTIMIZATION,
+                OptimizationType.GD_MOMENTUM,
+                OptimizationType.SGD_NESTEROV_MOMENTUM
+        );
         integerSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 5, 1));
         integerSpinner.valueProperty().addListener(e -> {
             changeInitialPolynomialParams(integerSpinner.getValue());
             drawGraph();
         });
+        optimizationTypeChoiceBox.setValue(OptimizationType.GD_MOMENTUM);
         regressionTypeChoiceBox.setValue(RegressionType.POLYNOMIAL);
         regressionTypeChoiceBox.setOnAction(e -> drawGraph());
         KB_INITIAL = new Pair<>(0d, 0d);
@@ -102,7 +114,19 @@ public class Controller implements Initializable {
 
     private void drawPolynomialFunction() {
         double height = canvas.getHeight();
-        List<Double> params = PolynomialSolver.gradientDescent(points, PARAMS_INITIAL, ITERATIONS_DEFAULT, STEP_DEFAULT, EPS_DEFAULT);
+        List<Double> params = null;
+        switch (optimizationTypeChoiceBox.getValue()) {
+            case GD_MOMENTUM -> {
+                params = PolynomialSolver.gradientDescentDGMomentum(points, PARAMS_INITIAL, ITERATIONS_DEFAULT, STEP_DEFAULT, EPS_DEFAULT);
+            }
+            case NO_OPTIMIZATION -> {
+                params = PolynomialSolver.gradientDescent(points, PARAMS_INITIAL, ITERATIONS_DEFAULT, STEP_DEFAULT, EPS_DEFAULT);
+            }
+            case SGD_NESTEROV_MOMENTUM -> {
+                params = PolynomialSolver.gradientDescentDGNesterovMomentum(points, PARAMS_INITIAL, EPOCHS_DEFAULT, DEFAULT_BATCH_SIZE, STEP_DEFAULT, EPS_DEFAULT);
+            }
+        }
+
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setLineWidth(1);
         gc.setStroke(Color.WHITE);
